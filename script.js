@@ -227,6 +227,7 @@ const layerData = [
     { name: 'LIGTAS AWS', desc: 'Monitoring Station', color: 'white' },
     { name: 'SARAI AWS', desc: 'Monitoring Station', color: 'white' },
     { name: 'ASTI AWS', desc: 'Monitoring Station', color: 'white' },
+    { name: 'PAGASA AWS', desc: 'Monitoring Station', color: 'white' },
     { name: 'Yellow buffer', desc: 'Warning Level 1 (20km)', color: 'yellow' },
     { name: 'Orange buffer', desc: 'Warning Level 2 (20km)', color: 'orange' },
     { name: 'Red buffer', desc: 'Warning Level 3 (20km)', color: 'red' }
@@ -239,7 +240,8 @@ const layerLogos = [
     'https://raw.githubusercontent.com/Gabzrock/LIGTASAGADEWSV3/refs/heads/main/logo3.png', 
     'https://ligtas.uplb.edu.ph/wp-content/uploads/2022/04/3-e1659971771933.png', 
     'https://ligtas.uplb.edu.ph/wp-content/uploads/2022/02/SARAI.png', 
-    'https://ligtas.uplb.edu.ph/wp-content/uploads/2022/10/DOST-ASTI-Logo-RGB-e1722929759841.png', 
+    'https://ligtas.uplb.edu.ph/wp-content/uploads/2022/10/DOST-ASTI-Logo-RGB-e1722929759841.png',
+    'https://raw.githubusercontent.com/Gabzrock/LIGTASkanaba/refs/heads/main/LOGO2.png', 
     'https://raw.githubusercontent.com/Gabzrock/LIGTASAGADEWSV3/refs/heads/main/layer_layers_icon_193964.png',
     'https://raw.githubusercontent.com/Gabzrock/LIGTASAGADEWSV3/refs/heads/main/layer_layers_icon_193964.png',
     'https://raw.githubusercontent.com/Gabzrock/LIGTASAGADEWSV3/refs/heads/main/layer_layers_icon_193964.png'
@@ -402,11 +404,13 @@ function createGeoJSONLayer(name, description, geojsonUrl, styleOptions = {}, ic
         });
 }
 
+// --- UPDATED LAYER DEFINITIONS ---
 const layerPromises = [
-    createGeoJSONLayer('LIGTAS-LSDB', 'Recorded Landslides', 'https://raw.githubusercontent.com/Gabzrock/LIGTAS-AGAD/refs/heads/main/LandslideDB-web.geojson', { color: 'orange', fillColor: 'orange', fillOpacity: 0.8, radius: 6, weight: 1 }, null),
-    createGeoJSONLayer('PH boundary', 'Philippine Boundary', 'https://raw.githubusercontent.com/Gabzrock/LIGTAS-AGAD/refs/heads/main/country.0.01.json', { color: 'white', weight: 1 }),
-    createGeoJSONLayer('CAR', 'Boundary', 'https://raw.githubusercontent.com/Gabzrock/LIGTASAGADEWSV3/refs/heads/main/uCAR-web.geojson', { color: 'blue', weight: 2 }),
-    createGeoJSONLayer('MGB-HIGH', 'Susceptibility', 'https://raw.githubusercontent.com/Gabzrock/LIGTASAGADEWSV3/refs/heads/main/uRIL_AWS_High%20Susceptibility.geojson', { color: 'red', fillOpacity: 0.6 }),
+    createGeoJSONLayer('LIGTAS-LSDB', 'Recorded Landslides', 'https://raw.githubusercontent.com/Gabzrock/LIGTAS-AGAD/refs/heads/main/LandslideDB-web.geojson', { color: 'orange', fillColor: 'orange', fillOpacity: 0.8, radius: 6, weight: 1, className: 'flashing-high'}, null),
+    
+    // UPDATED: Added className: 'flashing-high' to make this layer flash
+    createGeoJSONLayer('MGB-HIGH', 'Susceptibility', 'https://raw.githubusercontent.com/Gabzrock/LIGTASAGADEWSV3/refs/heads/main/uRIL_AWS_High%20Susceptibility.geojson', { color: 'red', fillOpacity: 0.6, className: 'flashing-high' }),
+    
     createGeoJSONLayer('MGB-MED', 'Susceptibility', 'https://raw.githubusercontent.com/Gabzrock/LIGTASAGADEWSV3/refs/heads/main/uRIL_AWS_Moderate_Susceptibility.geojson', { color: 'yellow', fillOpacity: 0.6 }),
     createGeoJSONLayer('MGB-LOW', 'Susceptibility', 'https://raw.githubusercontent.com/Gabzrock/LIGTASAGADEWSV3/refs/heads/main/uRIL_AWS_Low_Susceptibility.geojson', { color: 'green', fillOpacity: 0.6 })
 ];
@@ -465,7 +469,7 @@ Promise.allSettled(layerPromises).then((results) => {
 // --- 6. Data Fetching & Processing ---
 
 const warningLayerGroup = L.layerGroup().addTo(map);
-const googleSheetCSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSosfBP3StMyRUzwI0tUZPsLjPVH1zePCz8gZbTMOzjOvnonbmNCoy5VT46UxO0qdqb-Wm9EqTpXp8y/pub?gid=0&single=true&output=csv';
+const googleSheetCSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSosfBP3StMyRUzwI0tUZPsLjPVH1zePCz8gZbTMOzjOvnonbmNCoy5VT46UxO0qdqb-Wm9EqTpXp8y/pub?gid=470430875&single=true&output=csv';
 
 function getBufferColor(warningLevel) {
     if (warningLevel === 1) return 'yellow';
@@ -477,6 +481,8 @@ function getBufferColor(warningLevel) {
 function getStationIcon(stationName) {
     if (stationName && stationName.includes('ASTI')) return layerLogos[6];
     if (stationName && stationName.includes('SARAI')) return layerLogos[5];
+    if (stationName && stationName.includes('PAGASA')) return layerLogos[7];
+
     return layerLogos[4]; 
 }
 
@@ -553,7 +559,7 @@ function processAWSData(data) {
 function fetchAndRefreshData() {
     console.log("Fetching data...");
     
-    fetch('https://sheetlabs.com/LA25/LIGTASAGADEWSV3')
+    fetch('')
         .then(response => {
             if (!response.ok) throw new Error("Sheetlabs fetch failed");
             return response.json();
@@ -583,14 +589,14 @@ setInterval(fetchAndRefreshData, 60000);
 // --- 7. Sidebar & Forecast (With Raster Support) ---
 
 const geojsonUrls = [
-    'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day01_Bin1.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day01_Bin2.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day01_Bin3.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day01_Bin4.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day01_Bin5.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day01_Bin6.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day01_Bin7.geojson',
-    'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day02_Bin1.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day02_Bin2.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day02_Bin3.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day02_Bin4.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day02_Bin5.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day02_Bin6.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day02_Bin7.geojson',
-    'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day03_Bin1.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day03_Bin2.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day03_Bin3.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day03_Bin4.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day03_Bin5.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day03_Bin6.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day03_Bin7.geojson',
-    'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day04_Bin1.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day04_Bin2.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day04_Bin3.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day04_Bin4.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day04_Bin5.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day04_Bin6.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day04_Bin7.geojson',
-    'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day05_Bin1.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day05_Bin2.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day05_Bin3.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day05_Bin4.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day05_Bin5.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day05_Bin6.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day05_Bin7.geojson',
-    'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day06_Bin1.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day06_Bin2.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day06_Bin3.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day06_Bin4.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day06_Bin5.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day06_Bin6.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day06_Bin7.geojson',
-    'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day07_Bin1.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day07_Bin2.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day07_Bin3.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day07_Bin4.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day07_Bin5.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day07_Bin6.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day07_Bin7.geojson',
-    'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day08_Bin1.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day08_Bin2.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day08_Bin3.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day08_Bin4.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day08_Bin5.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day08_Bin6.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day08_Bin7.geojson'
+'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day01_Bin1.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day01_Bin2.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day01_Bin3.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day01_Bin4.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day01_Bin5.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day01_Bin6.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day01_Bin7.geojson',
+'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day02_Bin1.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day02_Bin2.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day02_Bin3.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day02_Bin4.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day02_Bin5.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day02_Bin6.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day02_Bin7.geojson',
+'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day03_Bin1.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day03_Bin2.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day03_Bin3.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day03_Bin4.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day03_Bin5.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day03_Bin6.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day03_Bin7.geojson',
+'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day04_Bin1.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day04_Bin2.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day04_Bin3.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day04_Bin4.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day04_Bin5.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day04_Bin6.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day04_Bin7.geojson',
+'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day05_Bin1.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day05_Bin2.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day05_Bin3.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day05_Bin4.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day05_Bin5.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day05_Bin6.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day05_Bin7.geojson',
+'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day06_Bin1.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day06_Bin2.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day06_Bin3.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day06_Bin4.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day06_Bin5.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day06_Bin6.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day06_Bin7.geojson',
+'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day07_Bin1.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day07_Bin2.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day07_Bin3.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day07_Bin4.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day07_Bin5.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day07_Bin6.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day07_Bin7.geojson',
+'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day08_Bin1.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day08_Bin2.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day08_Bin3.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day08_Bin4.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day08_Bin5.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day08_Bin6.geojson', 'https://raw.githubusercontent.com/Gabzrock/CRSS/refs/heads/main/Daily_RF_Day08_Bin7.geojson'
 ];
 
 const colors = [
